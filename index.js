@@ -1,79 +1,48 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+const { Client, GatewayIntentBits } = require("discord.js");
 const axios = require("axios");
 
-const TOKEN = process.env.TOKEN;
-const WEBHOOK = process.env.WEBHOOK;
-
-// NAME OF THE AUTO ROLE
-const AUTO_ROLE_NAME = "noob | lvl 1";
-
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers
-  ]
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.DirectMessages
+    ]
 });
 
+// CONFIG
+const WEBHOOK_URL = process.env.WEBHOOK; // Webhook URL in Secrets
+const ROLE_ID = "1429084247213215937";         // noob | lvl 1
+
 client.on("ready", () => {
-  console.log(`Bot is online as ${client.user.tag}`);
+    console.log(`Bot logged in as ${client.user.tag}`);
 });
 
 client.on("guildMemberAdd", async (member) => {
-  try {
-    //
-    // 1️⃣  AUTO ROLE
-    //
-    const role = member.guild.roles.cache.find(r => r.name === AUTO_ROLE_NAME);
-    if (role) {
-      await member.roles.add(role);
-      console.log(`Added role "${AUTO_ROLE_NAME}" to ${member.user.tag}`);
-    } else {
-      console.log(`Role "${AUTO_ROLE_NAME}" not found!`);
+
+    // 1️⃣ AUTO-ROLE
+    try {
+        const role = member.guild.roles.cache.get(ROLE_ID);
+        if (role) await member.roles.add(role);
+    } catch (err) {
+        console.log("Role Error:", err);
     }
 
-    //
-    // 2️⃣  WELCOME EMBED
-    //
-    const avatarUrl = member.user.displayAvatarURL({ size: 1024, extension: "png" });
+    // 2️⃣ SEND DM
+    try {
+        await member.send("Check out our website: https://offenseware.top ❤️");
+    } catch (err) {
+        console.log("DM Error:", err);
+    }
 
-    const embed = {
-      title: "🎉 Welcome to the server!",
-      description: `Glad to have you here, <@${member.id}>!\n\nMake yourself at home.`,
-      color: 0x5865F2, // Discord blurple
-      thumbnail: {
-        url: avatarUrl
-      },
-      fields: [
-        {
-          name: "New Member",
-          value: `${member.user.username}`,
-          inline: true
-        },
-        {
-          name: "Assigned Role",
-          value: `**${AUTO_ROLE_NAME}**`,
-          inline: true
-        }
-      ],
-      footer: {
-        text: "User joined",
-        icon_url: avatarUrl
-      },
-      timestamp: new Date()
-    };
-
-    // Webhook send
-    await axios.post(WEBHOOK, {
-      content: `<@${member.id}> just joined! 👋`,
-      embeds: [embed]
-    });
-
-    console.log(`Welcomed: ${member.user.username}`);
-
-  } catch (err) {
-    console.error("Error:", err);
-  }
+    // 3️⃣ WEBHOOK WELCOME MESSAGE
+    try {
+        await axios.post(WEBHOOK_URL, {
+            content: `Welcome to OffenseWare. W <@${member.id}> ❤️‍🩹`
+        });
+    } catch (err) {
+        console.log("Webhook Error:", err);
+    }
 });
 
-client.lo
-  gin(TOKEN);
+client.login(process.env
+             .TOKEN);
